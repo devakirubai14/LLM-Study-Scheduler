@@ -1,10 +1,11 @@
 import { useState } from "react";
+import "./App.css";
 
 function App() {
   const [subject, setSubject] = useState("");
   const [hours, setHours] = useState("");
   const [days, setDays] = useState("");
-  const [result, setResult] = useState("");
+  const [result, setResult] = useState([]);
 
   const generatePlan = async () => {
     const response = await fetch("http://localhost:5000/generate-plan", {
@@ -20,37 +21,56 @@ function App() {
     });
 
     const data = await response.json();
-    setResult(data.study_plan);
+    setResult(data.study_plan || []);
   };
 
   return (
-    <div style={{ padding: "40px" }}>
-      <h2>EduPlan-AI – Study Scheduler</h2>
+    <div className="container">
+      <h1>EduPlan-AI</h1>
+      <p className="subtitle">
+        Personalized Study Planner for Education 4.0
+      </p>
 
-      <input
-        placeholder="Subject"
-        value={subject}
-        onChange={(e) => setSubject(e.target.value)}
-      /><br /><br />
+      <div className="input-group">
+        <input
+          placeholder="Subject (e.g., Math)"
+          value={subject}
+          onChange={(e) => setSubject(e.target.value)}
+        />
+      </div>
 
-      <input
-        placeholder="Hours per day"
-        value={hours}
-        onChange={(e) => setHours(e.target.value)}
-      /><br /><br />
+      <div className="input-group">
+        <input
+          type="number"
+          placeholder="Hours per day"
+          value={hours}
+          onChange={(e) => setHours(e.target.value)}
+        />
+      </div>
 
-      <input
-        placeholder="Exam days"
-        value={days}
-        onChange={(e) => setDays(e.target.value)}
-      /><br /><br />
+      <div className="input-group">
+        <input
+          type="number"
+          placeholder="Days until exam"
+          value={days}
+          onChange={(e) => setDays(e.target.value)}
+        />
+      </div>
 
       <button onClick={generatePlan}>
         Generate Study Plan
       </button>
 
-      <h3>Result:</h3>
-      <p>{result}</p>
+      {result.length > 0 && (
+        <div className="result-box">
+          <h3>Your Study Plan</h3>
+          <ul>
+            {result.map((item, index) => (
+              <li key={index}>{item}</li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

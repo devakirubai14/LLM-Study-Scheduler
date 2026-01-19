@@ -1,42 +1,96 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+/* App.css */
+
+body {
+  margin: 0;
+  min-height: 100%;               /* KEY FIX */
+  font-family: 'Segoe UI', Roboto, sans-serif;
+  background: linear-gradient(135deg, #F8F7F3, #EEF7EE);
+  background-repeat: no-repeat;
+  background-attachment: fixed;   /* keeps background while scrolling */
+  color: #2e3a2f;
+}
+
+.container {
+  max-width: 680px;
+  width: 90%;
+  margin: 60px auto;
+  padding: 44px;
+  background: #ffffff;
+  border-radius: 24px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.12);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+h1 {
   text-align: center;
+  color: #2e7d32;
+  margin-bottom: 8px;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.subtitle {
+  text-align: center;
+  font-size: 14px;
+  color: #6b8e6e;
+  margin-bottom: 28px;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.input-group {
+  margin-bottom: 16px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+input {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 14px;
+  border-radius: 10px;
+  border: 1px solid #c8e6c9;
+  outline: none;
+  transition: border 0.2s;
 }
 
-.card {
-  padding: 2em;
+input:focus {
+  border-color: #66bb6a;
 }
 
-.read-the-docs {
-  color: #888;
+button {
+  width: 100%;
+  margin-top: 12px;
+  padding: 14px;
+  background-color: #4CAF50   /* calm green */  ;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+button:hover {
+  background-color: #4CAF50   /* calm green */  ;
+}
+
+.result-box {
+  margin-top: 28px;
+  padding: 18px;
+  background: #f9fbe7;
+  border-left: 4px solid #8bc34a;
+  border-radius: 10px;
+}
+
+.result-box h3 {
+  margin-top: 0;
+  color: #558b2f;
+}
+
+.result-box ul {
+  padding-left: 18px;
+}
+
+.result-box li {
+  margin-bottom: 6px;
+  font-size: 14px;
 }
