@@ -1,7 +1,12 @@
 def generate_schedule(data):
-    subject = data["subject"]
-    hours = data["hours_per_day"]
-    days = data["exam_days"]
+    subject = data.get("subject", "")
+
+    # Convert safely to int
+    try:
+        hours = int(data.get("hours_per_day", 0))
+        days = int(data.get("exam_days", 0))
+    except ValueError:
+        return ["Invalid input: hours and days must be numbers"]
 
     # return f"Study {subject} for {hours} hours daily for {days} days. Revise on the last day." - first done
     plan = []
