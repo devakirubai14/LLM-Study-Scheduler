@@ -33,7 +33,7 @@ function App() {
 
       <div className="input-group">
         <input
-          placeholder="Subject (e.g., Math)"
+          placeholder="Subjects (e.g., Math, Physics, Chemistry)"
           value={subject}
           onChange={(e) => setSubject(e.target.value)}
         />
