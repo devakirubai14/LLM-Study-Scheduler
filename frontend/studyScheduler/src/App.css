@@ -1,13 +1,11 @@
-/* App.css */
 
+/* Base Styles */
 body {
   margin: 0;
-  min-height: 100%;               /* KEY FIX */
+  min-height: 100vh;
   font-family: 'Segoe UI', Roboto, sans-serif;
   background: linear-gradient(135deg, #F8F7F3, #EEF7EE);
-  background-repeat: no-repeat;
-  background-attachment: fixed;   /* keeps background while scrolling */
-  color: #2e3a2f;
+  background-attachment: fixed;
 }
 
 .container {
@@ -37,8 +35,56 @@ h1 {
   margin-bottom: 28px;
 }
 
-.input-group {
+.card {
+  margin-top: 24px;
+  padding: 24px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+
+.card h3 {
   margin-bottom: 16px;
+  color: #2e7d32;
+}
+
+/* Button Base */
+button {
+  width: 100%;
+  margin-top: 12px;
+  padding: 14px;
+  background-color: #4CAF50;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+button:hover:not(:disabled) {
+  background-color: #45a049;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Status Tags */
+.status-tag {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  background: #e8f5e8;
+  color: #2e7d32;
+}
+
+.status-tag.missed-tag {
+  background: #fff3e0;
+  color: #e65100;
 }
 
 input {
@@ -49,48 +95,255 @@ input {
   border: 1px solid #c8e6c9;
   outline: none;
   transition: border 0.2s;
+  box-sizing: border-box;
 }
 
 input:focus {
   border-color: #66bb6a;
 }
 
-button {
+/* Input Row Layout */
+.input-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  }
+  
+  .input-row input {
+  flex: 1;
+  min-width: 0;
+  }
+  
+  /* Action Bar */
+  .action-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  }
+  
+  /* Secondary Button */
+  .secondary-btn {
+  flex: 1;
+  background-color: #2196F3;
+  color: white;
+  transition: background-color 0.2s ease;
+  }
+  
+  .secondary-btn:hover {
+  background-color: #1976D2;
+  }
+  
+  .secondary-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  }
+  
+  /* Progress Bar */
+  .progress-bar {
   width: 100%;
-  margin-top: 12px;
-  padding: 14px;
-  background-color: #4CAF50   /* calm green */  ;
-  color: #ffffff;
-  font-size: 15px;
+  height: 12px;
+  background: #e0e0e0;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  }
+  
+  .progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4CAF50, #8BC34A);
+  transition: width 0.4s ease;
+  }
+  
+  .progress-text {
   font-weight: 600;
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-button:hover {
-  background-color: #4CAF50   /* calm green */  ;
-}
-
-.result-box {
-  margin-top: 28px;
-  padding: 18px;
-  background: #f9fbe7;
-  border-left: 4px solid #8bc34a;
-  border-radius: 10px;
-}
-
-.result-box h3 {
-  margin-top: 0;
-  color: #558b2f;
-}
-
-.result-box ul {
-  padding-left: 18px;
-}
-
-.result-box li {
-  margin-bottom: 6px;
+  color: #2e7d32;
+  margin-bottom: 8px;
+  }
+  
+  /* Stats Row */
+  .stats {
+  display: flex;
+  gap: 24px;
   font-size: 14px;
-}
+  color: #666;
+  flex-wrap: wrap;
+  }
+  
+  /* Task List */
+  .tasks-list {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 4px;
+  }
+  
+  /* Scrollbar Styling */
+  .tasks-list::-webkit-scrollbar {
+  width: 6px;
+  }
+  
+  .tasks-list::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
+  }
+  
+  /* Task Item */
+  .task-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  margin-bottom: 12px;
+  border-radius: 12px;
+  border-left: 4px solid #e0e0e0;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  
+  .task-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  }
+  
+  /* Status Styles */
+  .task-item.pending {
+  background: #f8f9fa;
+  border-left-color: #ffc107;
+  }
+  
+  .task-item.completed {
+  background: #e8f5e8;
+  border-left-color: #4CAF50;
+  }
+  
+  .task-item.missed {
+  background: #fff3e0;
+  border-left-color: #FF9800;
+  }
+  
+  /* Task Info */
+  .task-info {
+  flex: 1;
+  }
+  
+  .task-info strong {
+  display: block;
+  color: #333;
+  }
+  
+  /* Task Actions */
+  .task-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  }
+  
+  /* Buttons */
+  .complete-btn,
+  .miss-btn {
+  padding: 8px 16px;
+  font-size: 13px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s ease, transform 0.1s ease;
+  }
+  
+  .complete-btn:hover,
+  .miss-btn:hover {
+  transform: translateY(-1px);
+  }
+  
+  .complete-btn {
+  background: #4CAF50;
+  color: white;
+  }
+  
+  .miss-btn {
+  background: #f44336;
+  color: white;
+  }
+  
+  .complete-btn:disabled,
+  .miss-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+  .input-row {
+  flex-direction: column;
+  }
+  
+  .action-bar {
+  flex-direction: column;
+  }
+  
+  .stats {
+  gap: 12px;
+  }
+  
+  .task-item {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  }
+  
+  .task-actions {
+  width: 100%;
+  justify-content: flex-start;
+  }
+  }
+
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  
+  .modal {
+    background: white;
+    padding: 32px;
+    border-radius: 16px;
+    max-width: 450px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+  
+  .modal h3 {
+    margin-top: 0;
+    color: #2e7d32;
+  }
+  
+  .modal-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+  }
+  
+  .modal-actions button {
+    flex: 1;
+    padding: 14px;
+    border-radius: 12px;
+    font-weight: 600;
+  }
+  
+  .task-duration {
+    font-size: 14px;
+    color: #666;
+    background: #f0f0f0;
+    padding: 4px 8px;
+    border-radius: 12px;
+    margin-top: 4px;
+    display: inline-block;
+  }
+  

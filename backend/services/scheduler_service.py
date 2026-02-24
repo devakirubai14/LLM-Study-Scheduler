@@ -2,16 +2,6 @@ from datetime import datetime, timedelta, time
 
 
 def build_time_based_plan(subjects, days, sessions_per_day, start_date):
-    """
-    subjects: list of subjects
-    days: total exam days
-    sessions_per_day: list of dicts like:
-        [
-            {"start": "05:00", "end": "06:30"},
-            {"start": "18:00", "end": "20:30"}
-        ]
-    start_date: datetime.date object
-    """
 
     tasks = []
     subject_index = 0
@@ -29,7 +19,7 @@ def build_time_based_plan(subjects, days, sessions_per_day, start_date):
 
             scheduled_start = datetime.combine(current_date, start_time)
             scheduled_end = datetime.combine(current_date, end_time)
-            
+
             if scheduled_end <= scheduled_start:
                 continue
 
@@ -47,7 +37,7 @@ def build_time_based_plan(subjects, days, sessions_per_day, start_date):
                 "status": "pending",
                 "reminder_sent": False,
                 "type": "study",
-                "created_at": datetime.utcnow()
+                "created_at": datetime.now()   # ✅ changed here
             })
 
             subject_index += 1

@@ -8,11 +8,16 @@ from models.task_model import task_collection
 from services.scheduler_service import build_time_based_plan
 from services.llm_service import generate_schedule
 from services.rescheduler_service import reschedule_missed_tasks
+from apscheduler.schedulers.background import BackgroundScheduler
+from services.reminder_service import check_and_send_reminders
 
 
 app = Flask(__name__)
 CORS(app)
 
+scheduler = BackgroundScheduler()
+scheduler.add_job(check_and_send_reminders, "interval", minutes=1)
+scheduler.start()
 
 @app.route('/')
 def home():
@@ -54,6 +59,10 @@ def create_plan():
     if not sessions:
         return jsonify({"status": "error", "message": "Sessions required"}), 400
 
+    phone = data.get("phone_number")
+    if not phone:
+        return jsonify({"error": "Phone number required"}), 400
+
     plan_doc = {
         "raw_input": data,
         "constraints": {
@@ -61,13 +70,14 @@ def create_plan():
             "exam_days": days,
             "hours_per_day": hours
         },
+        "phone_number": phone,
         "status": "active",
         "created_at": datetime.now(timezone.utc)
     }
 
     plan_id = study_plan_collection.insert_one(plan_doc).inserted_id
 
-    start_date = datetime.utcnow().date()
+    start_date = datetime.now().date()
 
     tasks = build_time_based_plan(
         subjects=subjects,
