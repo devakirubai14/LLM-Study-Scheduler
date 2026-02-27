@@ -1,7 +1,7 @@
 from datetime import datetime
 from bson import ObjectId
 from config import db
-from services.scheduler_service import build_time_based_plan
+from services.scheduler_service import build_priority_based_plan
 
 task_collection = db.daily_tasks
 plan_collection = db.study_plans
@@ -42,12 +42,18 @@ def reschedule_missed_tasks(plan_id, new_days, new_sessions):
 
     # Build new schedule from today
     start_date = datetime.utcnow().date()
+    
+    dummy_topics = [
+        {"topic": "Algebra", "priority": "High"},
+        {"topic": "Calculus", "priority": "Medium"},
+        {"topic": "Trigonometry", "priority": "Low"}
+    ]
 
-    new_tasks = build_time_based_plan(
-        subjects=subjects,
-        days=new_days,
-        sessions_per_day=new_sessions,
-        start_date=start_date
+    new_tasks = build_priority_based_plan(
+    topics_with_priority=dummy_topics,
+    days=new_days,
+    sessions_per_day=new_sessions,
+    start_date=start_date
     )
 
     for task in new_tasks:
