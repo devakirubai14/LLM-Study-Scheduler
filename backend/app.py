@@ -12,6 +12,7 @@ from services.scheduler_service import build_priority_based_plan
 from services.llm_service import analyze_topics
 from services.rescheduler_service import reschedule_missed_tasks
 from services.reminder_service import check_and_send_reminders
+from services.miss_detection_service import check_and_mark_missed_tasks
 
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -23,7 +24,10 @@ CORS(app)
 # ✅ Protect scheduler from running twice in debug mode
 if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
     scheduler = BackgroundScheduler()
+
     scheduler.add_job(check_and_send_reminders, "interval", minutes=1)
+    scheduler.add_job(check_and_mark_missed_tasks, "interval", minutes=1)
+
     scheduler.start()
 
 

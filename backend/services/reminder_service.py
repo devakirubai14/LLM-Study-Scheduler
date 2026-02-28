@@ -17,12 +17,15 @@ def check_and_send_reminders():
 
     for task in tasks:
         plan = plan_collection.find_one({"_id": task["plan_id"]})
-        phone = plan.get("phone_number")
+        if not plan:
+            continue
 
-        # Convert to 12-hour format for display
+        phone = plan.get("phone_number", "Unknown")
+
         readable_time = task["scheduled_start"].strftime("%I:%M %p")
+        topic_name = task.get("topic", "Study Session")
 
-        print(f"Reminder: Study {task['subject']} at {readable_time}. Phone: {phone}")
+        print(f"Reminder: Study {topic_name} at {readable_time}. Phone: {phone}")
 
         task_collection.update_one(
             {"_id": task["_id"]},
