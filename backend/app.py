@@ -13,6 +13,9 @@ from services.llm_service import analyze_topics
 from services.rescheduler_service import reschedule_missed_tasks
 from services.reminder_service import check_and_send_reminders
 from services.miss_detection_service import check_and_mark_missed_tasks
+from services.motivation_service import generate_completed_message
+from services.motivation_service import generate_support_message
+from models.notification_model import notification_collection
 
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -166,11 +169,15 @@ def get_plan_tasks(plan_id):
 
 @app.route("/api/task/complete", methods=["POST"])
 def mark_task_complete():
-    
+
     data = request.json
     task_id = data.get("task_id")
-    
-    result = task_collection.update_one(
+
+    task = task_collection.find_one({"_id": ObjectId(task_id)})
+    if not task:
+        return jsonify({"error": "Task not found"}), 404
+
+    task_collection.update_one(
         {"_id": ObjectId(task_id)},
         {
             "$set": {
@@ -179,10 +186,26 @@ def mark_task_complete():
             }
         }
     )
-    
+
+    topic_name = task.get("topic", "Study Session")
+
+    # 🔥 Generate completion motivation
+    message = generate_completed_message(topic_name)
+
+    # 🔹 Save notification
+    notification_collection.insert_one({
+        "plan_id": task["plan_id"],
+        "message": message,
+        "type": "completion",
+        "created_at": datetime.now(),
+        "read": False
+    })
+
+    print(f"Completion Motivation: {message}")
+
     return jsonify({
         "status": "updated",
-        "matched": result.matched_count
+        "message": message
     })
 
 
@@ -196,14 +219,47 @@ def mark_task_missed():
     data = request.json
     task_id = data.get("task_id")
 
-    result = task_collection.update_one(
+    task = task_collection.find_one({"_id": ObjectId(task_id)})
+    if not task:
+        return jsonify({"error": "Task not found"}), 404
+
+    # 1️⃣ Mark as missed
+    task_collection.update_one(
         {"_id": ObjectId(task_id)},
         {"$set": {"status": "missed"}}
     )
 
+    topic_name = task.get("topic", "Study Session")
+    plan_id = task["plan_id"]
+
+    # 2️⃣ Generate missed motivation
+    from services.motivation_service import generate_missed_message
+    message = generate_missed_message(topic_name)
+
+    # 3️⃣ Save notification
+    notification_collection.insert_one({
+        "plan_id": plan_id,
+        "message": message,
+        "type": "motivation",
+        "created_at": datetime.now(),
+        "read": False
+    })
+
+    # 4️⃣ Count total missed sessions
+    missed_count = task_collection.count_documents({
+        "plan_id": plan_id,
+        "status": "missed"
+    })
+
+    # 5️⃣ Adaptive logic trigger
+    if missed_count >= 3:
+        from services.rescheduler_service import adaptive_reschedule
+        adaptive_reschedule(plan_id)
+
     return jsonify({
         "status": "updated",
-        "matched": result.matched_count
+        "missed_count": missed_count,
+        "message": message
     })
 
 
@@ -260,6 +316,53 @@ def reschedule_plan(plan_id):
     result = reschedule_missed_tasks(plan_id, new_days, new_sessions)
 
     return jsonify(result)
+
+
+# ============================================
+# SAVING NOTIFICATION TO DB
+# ============================================
+
+@app.route("/api/plan/<plan_id>/notifications", methods=["GET"])
+def get_notifications(plan_id):
+
+    notifications = list(notification_collection.find(
+        {"plan_id": ObjectId(plan_id)}
+    ).sort("created_at", -1))
+
+    clean_notifications = []
+
+    for n in notifications:
+        clean_notifications.append({
+            "_id": str(n["_id"]),
+            "plan_id": str(n["plan_id"]),
+            "message": n.get("message"),
+            "type": n.get("type"),
+            "created_at": n.get("created_at").isoformat() if n.get("created_at") else None,
+            "read": n.get("read", False)
+        })
+
+    return jsonify(clean_notifications)
+
+# ============================================
+# SUPPORT MESSAGE
+# ============================================
+
+@app.route("/api/support/<plan_id>", methods=["POST"])
+def emotional_support(plan_id):
+
+    message = generate_support_message()
+
+    notification_collection.insert_one({
+        "plan_id": ObjectId(plan_id),
+        "message": message,
+        "type": "support",
+        "created_at": datetime.now(),
+        "read": False
+    })
+
+    return jsonify({
+        "message": message
+    })
 
 
 if __name__ == '__main__':
