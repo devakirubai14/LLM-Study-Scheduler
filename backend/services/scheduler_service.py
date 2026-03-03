@@ -1,39 +1,21 @@
 from datetime import datetime, timedelta, time
+import math
 
 
 def build_priority_based_plan(topics_with_priority, days, sessions_per_day, start_date):
-    """
-    topics_with_priority format:
-    [
-        {"topic": "Algebra", "priority": "High"},
-        {"topic": "Calculus", "priority": "Medium"},
-        {"topic": "Trigonometry", "priority": "Low"}
-    ]
-    """
 
     tasks = []
 
-    # 🔹 Step 1: Expand topics based on priority weight
-    weighted_topics = []
+    # 🔥 Sort topics by weight descending
+    topics_sorted = sorted(
+        topics_with_priority,
+        key=lambda x: x.get("weight", 1),
+        reverse=True
+    )
 
-    for item in topics_with_priority:
-        topic = item["topic"]
-        priority = item["priority"]
+    # 🔥 Flatten all session slots first
+    all_session_slots = []
 
-        if priority == "High":
-            weighted_topics.extend([item] * 3)  # High appears 3 times
-        elif priority == "Medium":
-            weighted_topics.extend([item] * 2)  # Medium appears 2 times
-        else:
-            weighted_topics.append(item)  # Low appears once
-
-    if not weighted_topics:
-        return []
-
-    topic_index = 0
-    topic_count = len(weighted_topics)
-
-    # 🔹 Step 2: Generate time-based schedule
     for day_offset in range(days):
         current_date = start_date + timedelta(days=day_offset)
 
@@ -50,24 +32,96 @@ def build_priority_based_plan(topics_with_priority, days, sessions_per_day, star
             if scheduled_end <= scheduled_start:
                 continue
 
-            duration_minutes = int(
-                (scheduled_end - scheduled_start).total_seconds() / 60
-            )
+            duration = int((scheduled_end - scheduled_start).total_seconds() / 60)
 
-            topic_data = weighted_topics[topic_index % topic_count]
-
-            tasks.append({
-                "topic": topic_data["topic"],
-                "priority": topic_data["priority"],
-                "scheduled_start": scheduled_start,
-                "scheduled_end": scheduled_end,
-                "duration_minutes": duration_minutes,
-                "status": "pending",
-                "reminder_sent": False,
-                "type": "study",
-                "created_at": datetime.now()
+            all_session_slots.append({
+                "start": scheduled_start,
+                "end": scheduled_end,
+                "duration": duration
             })
 
-            topic_index += 1
+    total_sessions = len(all_session_slots)
+
+    if total_sessions == 0:
+        return []
+
+    total_weight = sum(t.get("weight", 1) for t in topics_sorted)
+    if total_weight == 0:
+        total_weight = 1
+
+    # ========================================
+    # 🎯 STEP 1: Assign session count by weight
+    # ========================================
+
+    topic_session_counts = []
+
+    for topic in topics_sorted:
+        weight = topic.get("weight", 1)
+        proportional_sessions = (weight / total_weight) * total_sessions
+        assigned_sessions = math.floor(proportional_sessions)
+
+        topic_session_counts.append({
+            "topic": topic["topic"],
+            "weight": weight,
+            "sessions": assigned_sessions
+        })
+
+    # ========================================
+    # 🎯 STEP 2: Minimum 1 session per topic
+    # ========================================
+
+    for topic_data in topic_session_counts:
+        if topic_data["sessions"] == 0:
+            topic_data["sessions"] = 1
+
+    # ========================================
+    # 🎯 STEP 3: Adjust to match total sessions
+    # ========================================
+
+    assigned_total = sum(t["sessions"] for t in topic_session_counts)
+
+    while assigned_total > total_sessions:
+        # Remove 1 session from lowest weight topic
+        lowest = min(topic_session_counts, key=lambda x: x["weight"])
+        if lowest["sessions"] > 1:
+            lowest["sessions"] -= 1
+            assigned_total -= 1
+        else:
+            break
+
+    while assigned_total < total_sessions:
+        # Add 1 session to highest weight topic
+        highest = max(topic_session_counts, key=lambda x: x["weight"])
+        highest["sessions"] += 1
+        assigned_total += 1
+
+    # ========================================
+    # 🎯 STEP 4: Interleave sessions
+    # ========================================
+
+    session_sequence = []
+
+    while any(t["sessions"] > 0 for t in topic_session_counts):
+        for topic_data in topic_session_counts:
+            if topic_data["sessions"] > 0:
+                session_sequence.append(topic_data["topic"])
+                topic_data["sessions"] -= 1
+
+    # ========================================
+    # 🎯 STEP 5: Map topics to actual time slots
+    # ========================================
+
+    for slot, topic_name in zip(all_session_slots, session_sequence):
+
+        tasks.append({
+            "topic": topic_name,
+            "scheduled_start": slot["start"],
+            "scheduled_end": slot["end"],
+            "duration_minutes": slot["duration"],
+            "status": "pending",
+            "reminder_sent": False,
+            "type": "study",
+            "created_at": datetime.now()
+        })
 
     return tasks

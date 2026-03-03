@@ -16,6 +16,7 @@ from services.miss_detection_service import check_and_mark_missed_tasks
 from services.motivation_service import generate_completed_message
 from services.motivation_service import generate_support_message
 from models.notification_model import notification_collection
+from services.progress_intelligence_service import evaluate_progress_and_notify
 
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -80,13 +81,37 @@ def create_plan():
         "syllabus_text": data.get("syllabus_text", ""),
         "past_questions_text": data.get("past_questions_text", "")
     })
-
+    
     # Validate LLM response
     if not isinstance(topics_from_llm, list):
         return jsonify({
             "error": "LLM topic analysis failed",
             "details": topics_from_llm
         }), 500
+    
+    from services.weight_engine_service import (
+    extract_marks_from_blueprint,
+    extract_frequency_from_past_questions,
+    calculate_final_weights
+    )
+
+    # 🔹 Extract marks if blueprint exists
+    marks_data = extract_marks_from_blueprint(
+        data.get("marks_blueprint_text", "")
+    )
+
+    # 🔹 Extract frequency if past questions exist
+    frequency_data = extract_frequency_from_past_questions(
+        data.get("past_questions_text", "")
+    )
+
+    # 🔹 Calculate final weights
+    weighted_topics = calculate_final_weights(
+        topics_with_priority=topics_from_llm,
+        past_question_frequency=frequency_data,
+        marks_data=marks_data
+    )
+
 
     # Save plan
     plan_doc = {
@@ -106,7 +131,7 @@ def create_plan():
 
     # 🔹 Generate priority-based schedule
     tasks = build_priority_based_plan(
-        topics_with_priority=topics_from_llm,
+        topics_with_priority=weighted_topics,
         days=days,
         sessions_per_day=sessions,
         start_date=start_date
@@ -147,7 +172,7 @@ def get_plan_tasks(plan_id):
         {
             "_id": 1,
             "topic": 1,
-            "priority": 1,
+            "weight": 1,
             "status": 1,
             "scheduled_start": 1,
             "scheduled_end": 1,
@@ -200,6 +225,10 @@ def mark_task_complete():
         "created_at": datetime.now(),
         "read": False
     })
+    
+    # 🧠 Progress Intelligence
+    from services.progress_intelligence_service import evaluate_progress_and_notify
+    evaluate_progress_and_notify(task["plan_id"])
 
     print(f"Completion Motivation: {message}")
 
@@ -255,6 +284,9 @@ def mark_task_missed():
     if missed_count >= 3:
         from services.rescheduler_service import adaptive_reschedule
         adaptive_reschedule(plan_id)
+        
+    # 🧠 Progress Intelligence
+    evaluate_progress_and_notify(plan_id)
 
     return jsonify({
         "status": "updated",
@@ -363,6 +395,22 @@ def emotional_support(plan_id):
     return jsonify({
         "message": message
     })
+    
+@app.route("/api/test-blueprint", methods=["POST"])
+def test_blueprint():
+    from services.weight_engine_service import extract_marks_from_blueprint
+    data = request.json
+    blueprint = data.get("blueprint_text")
+    result = extract_marks_from_blueprint(blueprint)
+    return jsonify(result)
+
+@app.route("/api/test-frequency", methods=["POST"])
+def test_frequency():
+    from services.weight_engine_service import extract_frequency_from_past_questions
+    data = request.json
+    text = data.get("past_questions_text")
+    result = extract_frequency_from_past_questions(text)
+    return jsonify(result)
 
 
 if __name__ == '__main__':

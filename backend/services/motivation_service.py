@@ -29,3 +29,14 @@ def generate_support_message():
         "You are stronger than this moment. Keep going 🌟"
     ]
     return random.choice(messages)
+
+def generate_high_performance_message():
+    messages = [
+        "Outstanding consistency! You're operating at a top performer level 🔥",
+        "This is elite discipline. Keep going — you're exam ready 🚀",
+        "High performance detected. This is how toppers train 🎯",
+        "You're not just studying. You're mastering it 💎",
+        "This momentum is dangerous — in a good way 😎"
+    ]
+    import random
+    return random.choice(messages)
