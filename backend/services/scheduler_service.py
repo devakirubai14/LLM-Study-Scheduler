@@ -1,8 +1,19 @@
 from datetime import datetime, timedelta, time
 import math
 
+def get_adaptive_duration(level, base_duration):
+    """
+    Adjust session duration based on student level
+    """
+    
+    if level == "low":
+        return 45
+    elif level == "high":
+        return 75
+    else:
+        return base_duration
 
-def build_priority_based_plan(topics_with_priority, days, sessions_per_day, start_date):
+def build_priority_based_plan(topics_with_priority, days, sessions_per_day, start_date, adaptive_level="medium"):
 
     tasks = []
 
@@ -32,7 +43,11 @@ def build_priority_based_plan(topics_with_priority, days, sessions_per_day, star
             if scheduled_end <= scheduled_start:
                 continue
 
-            duration = int((scheduled_end - scheduled_start).total_seconds() / 60)
+            base_duration = int((scheduled_end - scheduled_start).total_seconds() / 60)
+
+            duration = get_adaptive_duration(adaptive_level, base_duration)
+
+            scheduled_end = scheduled_start + timedelta(minutes=duration)
 
             all_session_slots.append({
                 "start": scheduled_start,

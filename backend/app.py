@@ -142,7 +142,8 @@ def create_plan():
         topics_with_priority=weighted_topics,
         days=days,
         sessions_per_day=sessions,
-        start_date=start_date
+        start_date=start_date,
+        adaptive_level=plan_doc["adaptive_level"]
     )
     from services.cognitive_ordering_service import reorder_sessions_by_cognitive_curve
 
