@@ -70,6 +70,9 @@ def create_plan():
     if not sessions:
         return jsonify({"status": "error", "message": "Sessions required"}), 400
 
+    from services.exam_intensity_service import scale_sessions
+    sessions = scale_sessions(sessions, days)
+
     phone = data.get("phone_number")
     if not phone:
         return jsonify({"status": "error", "message": "Phone number required"}), 400
@@ -114,6 +117,8 @@ def create_plan():
 
 
     # Save plan
+    self_rating = data.get("self_rating", "medium")
+
     plan_doc = {
         "raw_input": data,
         "constraints": {
@@ -122,6 +127,9 @@ def create_plan():
         },
         "phone_number": phone,
         "status": "active",
+        "self_rating": self_rating,
+        "adaptive_level": self_rating,  # starts same as self rating
+        "adaptive_last_updated": datetime.now(),
         "created_at": datetime.now()
     }
 
@@ -135,6 +143,12 @@ def create_plan():
         days=days,
         sessions_per_day=sessions,
         start_date=start_date
+    )
+    from services.cognitive_ordering_service import reorder_sessions_by_cognitive_curve
+
+    tasks = reorder_sessions_by_cognitive_curve(
+        tasks,
+        plan_doc["adaptive_level"]
     )
 
     for t in tasks:
@@ -172,6 +186,7 @@ def get_plan_tasks(plan_id):
         {
             "_id": 1,
             "topic": 1,
+            "phase": 1,
             "weight": 1,
             "status": 1,
             "scheduled_start": 1,
@@ -229,6 +244,9 @@ def mark_task_complete():
     # 🧠 Progress Intelligence
     from services.progress_intelligence_service import evaluate_progress_and_notify
     evaluate_progress_and_notify(task["plan_id"])
+    
+    from services.adaptive_level_service import evaluate_adaptive_level
+    evaluate_adaptive_level(task["plan_id"])
 
     print(f"Completion Motivation: {message}")
 
@@ -287,6 +305,9 @@ def mark_task_missed():
         
     # 🧠 Progress Intelligence
     evaluate_progress_and_notify(plan_id)
+    
+    from services.adaptive_level_service import evaluate_adaptive_level
+    evaluate_adaptive_level(plan_id)
 
     return jsonify({
         "status": "updated",

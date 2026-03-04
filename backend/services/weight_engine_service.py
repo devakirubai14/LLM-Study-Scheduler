@@ -136,7 +136,13 @@ def calculate_final_weights(topics_with_priority, past_question_frequency=None, 
 
         # 🔥 Layer 3: Marks override everything
         if marks_data:
-            mark_entry = next((m for m in marks_data if m["topic"].lower() == name.lower()), None)
+            mark_entry = next(
+                (
+                    m for m in marks_data
+                    if m["topic"].lower() in name.lower()
+                ),
+                None
+            )
             if mark_entry:
                 final_weights.append({
                     "topic": name,

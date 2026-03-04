@@ -94,6 +94,12 @@ def build_priority_based_plan(topics_with_priority, days, sessions_per_day, star
         highest = max(topic_session_counts, key=lambda x: x["weight"])
         highest["sessions"] += 1
         assigned_total += 1
+        
+    # Build topic → weight lookup
+    topic_weight_lookup = {
+        t["topic"]: t.get("weight", 1)
+        for t in topics_sorted
+    }
 
     # ========================================
     # 🎯 STEP 4: Interleave sessions
@@ -111,10 +117,18 @@ def build_priority_based_plan(topics_with_priority, days, sessions_per_day, star
     # 🎯 STEP 5: Map topics to actual time slots
     # ========================================
 
+    phase_cycle = ["study", "solve", "revise"]
+    
     for slot, topic_name in zip(all_session_slots, session_sequence):
+
+        weight = topic_weight_lookup.get(topic_name, 1)
+
+        phase = phase_cycle[len(tasks) % 3]
 
         tasks.append({
             "topic": topic_name,
+            "phase": phase,
+            "weight": weight,
             "scheduled_start": slot["start"],
             "scheduled_end": slot["end"],
             "duration_minutes": slot["duration"],
