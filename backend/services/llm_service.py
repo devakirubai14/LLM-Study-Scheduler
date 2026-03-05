@@ -20,7 +20,9 @@ Target Score: {target_score}+
 Based on the following syllabus and past questions,
 identify important topics for scoring high marks.
 
-Return ONLY valid JSON array like:
+Return ONLY unique topics in JSON format.
+
+Do not repeat topics like:
 [
   {{"topic":"Topic Name","priority":"High"}},
   {{"topic":"Topic Name","priority":"Medium"}},

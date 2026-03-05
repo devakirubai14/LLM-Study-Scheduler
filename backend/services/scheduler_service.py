@@ -16,6 +16,10 @@ def get_adaptive_duration(level, base_duration):
 def build_priority_based_plan(topics_with_priority, days, sessions_per_day, start_date, adaptive_level="medium"):
 
     tasks = []
+    
+    for topic in topics_with_priority:
+        if "weight" not in topic:
+            topic["weight"] = 1
 
     # 🔥 Sort topics by weight descending
     topics_sorted = sorted(
@@ -122,11 +126,37 @@ def build_priority_based_plan(topics_with_priority, days, sessions_per_day, star
 
     session_sequence = []
 
-    while any(t["sessions"] > 0 for t in topic_session_counts):
-        for topic_data in topic_session_counts:
-            if topic_data["sessions"] > 0:
-                session_sequence.append(topic_data["topic"])
-                topic_data["sessions"] -= 1
+    while True:
+        active = [t for t in topic_session_counts if t["sessions"] > 0]
+        if not active:
+            break
+
+        for topic_data in active:
+            session_sequence.append(topic_data["topic"])
+            topic_data["sessions"] -= 1
+                
+    # ========================================
+    # 🎯 STEP 4.1: Prevent repetitive topics
+    # (makes schedule more human-like)
+    # ========================================
+
+    spaced_sequence = []
+    last_topic = None
+
+    for topic in session_sequence:
+
+        if topic == last_topic:
+            # try to find alternative topic
+            for alt in session_sequence:
+                if alt != last_topic:
+                    spaced_sequence.append(alt)
+                    last_topic = alt
+                    break
+        else:
+            spaced_sequence.append(topic)
+            last_topic = topic
+
+    session_sequence = spaced_sequence
 
     # ========================================
     # 🎯 STEP 5: Map topics to actual time slots
@@ -153,4 +183,35 @@ def build_priority_based_plan(topics_with_priority, days, sessions_per_day, star
             "created_at": datetime.now()
         })
 
+    tasks = inject_smart_breaks(tasks)
+
     return tasks
+
+def inject_smart_breaks(tasks, break_after=3, break_minutes=10):
+
+    new_tasks = []
+    counter = 0
+
+    for task in tasks:
+        new_tasks.append(task)
+        counter += 1
+
+        if counter == break_after and task["type"] != "break":
+
+            break_task = {
+                "topic": "Break",
+                "phase": "rest",
+                "weight": 0,
+                "scheduled_start": task["scheduled_end"],
+                "scheduled_end": task["scheduled_end"] + timedelta(minutes=break_minutes),
+                "duration_minutes": break_minutes,
+                "status": "pending",
+                "type": "break",
+                "reminder_sent": True,
+                "created_at": datetime.now()
+            }
+
+            new_tasks.append(break_task)
+            counter = 0
+
+    return new_tasks

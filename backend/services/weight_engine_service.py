@@ -139,7 +139,7 @@ def calculate_final_weights(topics_with_priority, past_question_frequency=None, 
             mark_entry = next(
                 (
                     m for m in marks_data
-                    if m["topic"].lower() in name.lower()
+                    if name.lower() in m["topic"].lower()
                 ),
                 None
             )
